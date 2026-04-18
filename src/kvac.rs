@@ -607,10 +607,7 @@ impl<S: Suite> State<S> {
     ///
     /// Returns [`ArcError::LimitExceeded`] if the state has reached the
     /// maximum number of presentations.
-    pub fn present(
-        &mut self,
-        csrng: &mut impl CryptoRngCore,
-    ) -> Result<Presentation<S>, ArcError> {
+    pub fn present(&mut self, csrng: &mut impl CryptoRngCore) -> Result<Presentation<S>, ArcError> {
         if self.presentations_used >= self.presentation_limit.get() {
             return Err(ArcError::LimitExceeded);
         }
