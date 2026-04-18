@@ -6,7 +6,7 @@
 A Rust implementation of **Anonymous Rate-Limited Credentials (ARC)**, a
 privacy-preserving protocol that lets a server to throttle or rate-limit access from anonymous clients.
 
-Compliant with [draft-privacypass-arc-crypto-01](https://datatracker.ietf.org/doc/html/draft-privacypass-arc-crypto-01).
+Compliant with [draft-ietf-privacypass-arc-crypto-01](https://datatracker.ietf.org/doc/draft-ietf-privacypass-arc-crypto/01/).
 
 Part of the [Privacy Pass](https://datatracker.ietf.org/wg/privacypass/about/) protocol family.
 
@@ -36,7 +36,7 @@ Add this line to the `Cargo.toml` file.
 
 ```toml
 [dependencies]
-arc = "0.1
+arc = { version = "0.1.0", git = "https://github.com/cloudflareresearch/arc/" }
 ```
 
 ### Feature Flags
@@ -85,9 +85,7 @@ let credential = Credential::new(&params, request, secrets, response)?;
 ### 3 — Credential Presentation
 
 ```rust
-use core::num::NonZero;
-
-const N: NonZero<u32> = NonZero::new(10).expect("non-zero");
+let N = core::num::NonZero::new(10)?;
 const PRESENTATION_CONTEXT: &[u8] = b"example.com/api/action";
 
 // Client: create a state bound to this context (up to N presentations)
@@ -103,7 +101,7 @@ let result = presentation.verify(&key, REQUEST_CONTEXT, N, PRESENTATION_CONTEXT)
 // Returns Ok(()) if valid and within rate limit.
 // Returns Err(Error::VerificationFailed) otherwise.
 
-// Issuer: If presentation is valid, stores the presentation 
+// Issuer: If presentation is valid, stores the presentation
 ```
 
 ---
@@ -113,8 +111,8 @@ let result = presentation.verify(&key, REQUEST_CONTEXT, N, PRESENTATION_CONTEXT)
 ### Cryptographic Building Blocks
 
 | Component | Role |
-|---|---|
-| Algebraic MAC (KVAC) | Core [KVAC] credential binding — ties Issuer key to client attributes |  |
+| --------- | ---- |
+| Algebraic MAC (KVAC) | Core [KVAC] credential binding — ties Issuer key to client attributes |
 | ElGamal encryption | Blind attribute transmission during issuance |
 | Pedersen commitments | Commit to nonce and attributes without revealing them |
 | Schnorr Σ-protocols | Zero-knowledge Schnorr proofs via [`sigma-proofs`] + [`spongefish`] |
@@ -130,9 +128,8 @@ let result = presentation.verify(&key, REQUEST_CONTEXT, N, PRESENTATION_CONTEXT)
 
 ## Status and Stability
 
-This crate tracks the implementation of the [draft-privacypass-arc-crypto](https://datatracker.ietf.org/doc/draft-privacypass-arc-crypto/) document. 
+This crate tracks the implementation of the [draft-privacypass-arc-crypto](https://datatracker.ietf.org/doc/draft-ietf-privacypass-arc-crypto/) document.
 The API is not yet stable: breaking changes may occur until the specification is finalized.
-
 
 ### `no_std` support
 
@@ -150,4 +147,3 @@ To report a vulnerability, follow the process in [SECURITY.md](SECURITY.md).
 ## License
 
 Apache License, Version 2.0. See [LICENSE](LICENSE) file.
-
