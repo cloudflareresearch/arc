@@ -32,19 +32,6 @@ use crate::{
     serde::{Des, Ser},
 };
 
-// ElGamal_encryption
-macro_rules! encrypt {
-    ($secret:expr, $g:expr, $h:expr) => {
-        $g * $secret.msg + $h * $secret.rand
-    };
-}
-
-macro_rules! pedersen_commitment {
-    ($input:expr, $rand:expr, $g:expr, $h:expr) => {
-        ($g * $input) + ($h * $rand)
-    };
-}
-
 /// Number of attributes to be MAC-ed.
 const NUM_ATTRS: usize = 2;
 
@@ -52,6 +39,20 @@ type Commitment<S> = <S as Suite>::Elt;
 type Randomness<S> = <S as Suite>::Scalar;
 type Ciphertext<S> = <S as Suite>::Elt;
 type NikzElt<S> = Nizk<CanonicalLinearRelation<<S as Suite>::Elt>>;
+
+// ElGamal_encryption
+fn encrypt<S: Suite>(secret: &Secret<S>, base_g: S::Elt, base_h: S::Elt) -> Ciphertext<S> {
+    base_g * secret.msg + base_h * secret.rand
+}
+
+fn pedersen_commitment<S: Suite>(
+    input: &S::Scalar,
+    base_g: S::Elt,
+    rand: &Randomness<S>,
+    base_h: S::Elt,
+) -> Commitment<S> {
+    base_g * input + base_h * rand
+}
 
 /// Public parameters of the Issuer used for generating a [`Credential`].
 #[derive(Clone, Copy)]
@@ -113,7 +114,7 @@ impl<S: Suite> SecretKey<S> {
         let h = S::gen_h()?;
         Ok(IssuerParams {
             mac_params: self.mac_key.issuer_params()?,
-            x0_com: pedersen_commitment!(&self.mac_key.x0, &self.x0_rand, g, h),
+            x0_com: pedersen_commitment::<S>(&self.mac_key.x0, g, &self.x0_rand, h),
         })
     }
 
@@ -135,7 +136,6 @@ impl<S: Suite> SecretKey<S> {
     /// Recovers from its binary format.
     ///
     /// The slice length must match the value returned by [`Self::bytes_len`].
-    #[must_use = "The returned value must be used."]
     pub fn from_bytes(b: &[u8]) -> Result<Self, ArcError> {
         let mut d = Des::new(b, Self::bytes_len())?;
         let key = Self {
@@ -179,7 +179,6 @@ impl<S: Suite> ClientSecret<S> {
     /// Recovers from its binary format.
     ///
     /// The slice length must match the value returned by [`Self::bytes_len`].
-    #[must_use = "The returned value must be used."]
     pub fn from_bytes(b: &[u8]) -> Result<Self, ArcError> {
         let mut d = Des::new(b, Self::bytes_len())?;
         let secret = Self([
@@ -214,7 +213,6 @@ impl<S: Suite> CredentialRequest<S> {
     ///
     /// It also returns the [`ClientSecret`] that must be used to generate a [`Credential`], once the
     /// Issuer replies with a [`CredentialResponse`].
-    #[must_use = "The returned value must be used."]
     pub fn new(
         csrng: &mut impl CryptoRngCore,
         request_context: &[u8],
@@ -232,7 +230,7 @@ impl<S: Suite> CredentialRequest<S> {
         ]);
         let g = S::gen_g();
         let h = S::gen_h()?;
-        let encrypted_messages = from_fn(|i| encrypt!(&secrets.0[i], g, h));
+        let encrypted_messages = from_fn(|i| encrypt(&secrets.0[i], g, h));
         let witness = [
             secrets.0[0].msg,
             secrets.0[1].msg,
@@ -253,7 +251,6 @@ impl<S: Suite> CredentialRequest<S> {
     }
 
     /// Builds the statement to be proven or verified by the proof system.
-    #[must_use = "The returned value must be used."]
     fn build_statement(
         encrypted_messages: [Ciphertext<S>; NUM_ATTRS],
         g: S::Elt,
@@ -296,7 +293,6 @@ impl<S: Suite> CredentialRequest<S> {
     /// Recovers from its binary format.
     ///
     /// The slice length must match the value returned by [`Self::bytes_len`].
-    #[must_use = "The returned value must be used."]
     pub fn from_bytes(b: &[u8]) -> Result<Self, ArcError> {
         let mut d = Des::new(b, Self::bytes_len())?;
         let request = Self {
@@ -328,7 +324,6 @@ impl<S: Suite> CredentialResponse<S> {
     const TAG: &[u8] = b"CredentialResponse";
 
     /// Randomized generation of a [`CredentialResponse`] in response to a [`CredentialRequest`] from the Client.
-    #[must_use = "The returned value must be used."]
     pub fn new(
         csrng: &mut impl CryptoRngCore,
         key: &SecretKey<S>,
@@ -369,7 +364,6 @@ impl<S: Suite> CredentialResponse<S> {
     }
 
     /// Builds the statement to be proven or verified by the proof system.
-    #[must_use = "The returned value must be used."]
     fn build_statement(
         params: &IssuerParams<S>,
         request: CredentialRequest<S>,
@@ -478,7 +472,6 @@ impl<S: Suite> CredentialResponse<S> {
     /// Recovers from its binary format.
     ///
     /// The slice length must match the value returned by [`Self::bytes_len`].
-    #[must_use = "The returned value must be used."]
     pub fn from_bytes(b: &[u8]) -> Result<Self, ArcError> {
         let mut d = Des::new(b, Self::bytes_len())?;
         let response = Self {
@@ -508,7 +501,6 @@ impl<S: Suite> Credential<S> {
     /// A [`Credential`] is generated from a [`CredentialRequest`] and
     /// [`ClientSecret`], the [`CredentialResponse`] sent by the Issuer,
     /// and the public [`IssuerParams`] of the Issuer.
-    #[must_use = "The returned value must be used."]
     pub fn new(
         params: &IssuerParams<S>,
         request: CredentialRequest<S>,
@@ -578,7 +570,6 @@ impl<S: Suite> Credential<S> {
     /// Recovers from its binary format.
     ///
     /// The slice length must match the value returned by [`Self::bytes_len`].
-    #[must_use = "The returned value must be used."]
     pub fn from_bytes(b: &[u8]) -> Result<Self, ArcError> {
         let mut d = Des::new(b, Self::bytes_len())?;
         let credential = Self {
@@ -607,10 +598,7 @@ impl<S: Suite> State<S> {
     ///
     /// Returns [`ArcError::LimitExceeded`] if the state has reached the
     /// maximum number of presentations.
-    pub fn present(
-        &mut self,
-        csrng: &mut impl CryptoRngCore,
-    ) -> Result<Presentation<S>, ArcError> {
+    pub fn present(&mut self, csrng: &mut impl CryptoRngCore) -> Result<Presentation<S>, ArcError> {
         if self.presentations_used >= self.presentation_limit.get() {
             return Err(ArcError::LimitExceeded);
         }
@@ -652,7 +640,6 @@ impl<S: Suite> State<S> {
     }
 
     /// Recovers from its binary format.
-    #[must_use = "The returned value must be used."]
     pub fn from_bytes(b: &[u8]) -> Result<Self, ArcError> {
         let mut d = Des(b);
         let credential = Credential::from_bytes(&d.get_bytes(Credential::<S>::bytes_len())?)?;
@@ -715,11 +702,11 @@ impl<S: Suite> Presentation<S> {
         let u = credential.u * a;
         let u_prime = credential.u_prime * a;
         let u_prime_commit = u_prime + gen_g * r;
-        let m1_commit = pedersen_commitment!(credential.m1, z, u, gen_h);
+        let m1_commit = pedersen_commitment::<S>(&credential.m1, u, &z, gen_h);
 
         let [nonce_blinding] = <S::Elt as ScalarRng>::random_scalars(csrng);
         let nonce = S::Scalar::from_u128(u128::from(counter));
-        let nonce_commit = pedersen_commitment!(&nonce, &nonce_blinding, gen_g, gen_h);
+        let nonce_commit = pedersen_commitment::<S>(&nonce, gen_g, &nonce_blinding, gen_h);
 
         let gen_t = *presentation_context_tag;
         let inv_m1_nonce = (credential.m1 + nonce)
@@ -733,7 +720,7 @@ impl<S: Suite> Presentation<S> {
 
         // Calculate Pedersen commitments of the bit decomposition (b_i) using randommess (s_i).
         let d = zip(&range_proof_witness.b, &range_proof_witness.s)
-            .map(|(bi, si)| pedersen_commitment!(bi, si, gen_g, gen_h))
+            .map(|(bi, si)| pedersen_commitment::<S>(bi, gen_g, si, gen_h))
             .collect();
         let inner = PresentationInner {
             u,
@@ -762,7 +749,6 @@ impl<S: Suite> Presentation<S> {
     }
 
     /// Builds the statement to be proven or verified by the proof system.
-    #[must_use = "The returned value must be used."]
     fn build_statement(
         inner: &PresentationInner<S>,
         x1: S::Elt,

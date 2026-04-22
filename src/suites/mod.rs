@@ -13,15 +13,11 @@
 // limitations under the License.
 
 #[cfg(feature = "suite_p256")]
-#[cfg_attr(docsrs, doc(cfg(feature = "suite_p256")))]
 mod p256;
 #[cfg(feature = "suite_ristretto255")]
-#[cfg_attr(docsrs, doc(cfg(feature = "suite_ristretto255")))]
 mod ristretto255;
 
 #[cfg(feature = "suite_p256")]
-#[cfg_attr(docsrs, doc(cfg(feature = "suite_p256")))]
 pub use p256::P256;
 #[cfg(feature = "suite_ristretto255")]
-#[cfg_attr(docsrs, doc(cfg(feature = "suite_ristretto255")))]
 pub use ristretto255::Ristretto255;
