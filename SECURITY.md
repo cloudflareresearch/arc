@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Report security issues to: **<security@cloudflare.com>**
+Report security issues to: **<ask-research@cloudflare.com>**
 
 Include in your report:
 
@@ -22,6 +22,6 @@ The following are in scope for this policy:
 
 The following are **out of scope**:
 
-- Vulnerabilities in dependency crates, report these to their respective maintainers. 
+- Vulnerabilities in dependency crates, report these to their respective maintainers.
 - Theoretical weaknesses in the ARC protocol itself. File these against the
   [ARC draft](https://github.com/ietf-wg-privacypass/draft-arc/issues).
