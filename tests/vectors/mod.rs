@@ -186,7 +186,7 @@ impl PresentationVector {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct SuiteVector {
+pub(crate) struct SuiteVector {
     #[serde(rename = "Credential")]
     credential: CredentialVector,
     #[serde(rename = "CredentialRequest")]
@@ -201,10 +201,10 @@ pub struct SuiteVector {
     server_key: ServerKeysVector,
 }
 
-pub struct TestDrng(Shake128);
+struct TestDrng(Shake128);
 
 impl TestDrng {
-    pub fn from_seed(seed_label: &[u8]) -> Self {
+    fn from_seed(seed_label: &[u8]) -> Self {
         let mut sponge = Shake128::default();
         let mut initial_block = [0u8; 168];
         let domain = b"sigma-proofs/TestDRNG/SHAKE128";
@@ -245,8 +245,8 @@ impl RngCore for TestDrng {
         Ok(())
     }
 }
-#[allow(dead_code)]
-pub fn test_vectors_arc<S: Suite>(v: SuiteVector) {
+
+pub(crate) fn test_vectors_arc<S: Suite>(v: SuiteVector) {
     const SEED: &[u8] = b"test vector seed";
     let rng = &mut TestDrng::from_seed(SEED);
     let private_key = SecretKey::<S>::new(rng);
