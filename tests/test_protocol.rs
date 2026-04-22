@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod arc_tests;
+mod protocol;
 
 #[cfg(feature = "suite_p256")]
 mod p256 {

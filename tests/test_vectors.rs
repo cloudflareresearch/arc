@@ -12,15 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod arc_tests;
+mod vectors;
 
 #[cfg(feature = "suite_p256")]
 mod p256 {
+    use crate::vectors::{SuiteVector, test_vectors_arc};
 
-    use crate::arc_tests::vectors::{SuiteVector, test_vectors_arc};
-    use serde::Deserialize;
-
-    #[derive(Deserialize)]
+    #[derive(serde::Deserialize)]
     struct Vector {
         #[serde(rename = "ARCV1-P256")]
         suite: SuiteVector,

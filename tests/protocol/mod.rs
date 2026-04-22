@@ -21,21 +21,16 @@ use arc::{
 use rand::rngs::ThreadRng;
 
 #[macro_export]
-macro_rules! generate_tests {
-    ($suite:ty, tests: [ $($test_fn:ident),* $(,)? ]) => {
-        $(
-            #[test]
-            fn $test_fn() {
-                $crate::arc_tests::protocol::$test_fn::<$suite>();
-            }
-        )*
-    };
-}
-
-#[macro_export]
 macro_rules! all_arc_tests {
     ($suite:ty) => {
-        $crate::generate_tests!($suite, tests: [happy_path, multiple_presentations]);
+        #[test]
+        fn happy_path() {
+            $crate::protocol::happy_path::<$suite>();
+        }
+        #[test]
+        fn multiple_presentations() {
+            $crate::protocol::multiple_presentations::<$suite>();
+        }
     };
 }
 
@@ -49,8 +44,7 @@ macro_rules! test_serialization {
     };
 }
 
-#[allow(dead_code)]
-pub fn happy_path<S: Suite>() {
+pub(crate) fn happy_path<S: Suite>() {
     let req_context = b"RequestContext";
     let csrng = &mut ThreadRng::default();
     let key = SecretKey::<S>::new(csrng);
@@ -95,8 +89,7 @@ pub fn happy_path<S: Suite>() {
     assert!(result.is_err());
 }
 
-#[allow(dead_code)]
-pub fn multiple_presentations<S: Suite>() {
+pub(crate) fn multiple_presentations<S: Suite>() {
     let request_ctx = b"RequestContext";
     let csrng = &mut ThreadRng::default();
     let key = SecretKey::<S>::new(csrng);
